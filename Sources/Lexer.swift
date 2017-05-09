@@ -16,6 +16,7 @@ enum Token {
     case float(Double)
 }
 
+// when we compare tokens we just take care about their types.
 func ==(lhs: Token, rhs: Token) -> Bool {
     switch (lhs, rhs) {
     case (.lparen, .lparen):
@@ -84,6 +85,7 @@ class Lexer {
 
         consume() // beginning "
         while let char = peek {
+            // if we hit into " and it was not escaped, it's end of string
             if char == "\"" && last != "\\" {
                 consume()
                 break
@@ -108,15 +110,18 @@ class Lexer {
             return nil
         }
 
+        // support for one-char tokens
         if let token = tokenMapping[char] {
             consume()
             return token
         }
 
+        // read string
         if peek == "\"" {
             return .string(readString())
         }
 
+        // try to guess what we read
         let temp = readSymbolOrNumber()
         if let i = Int(temp) {
             return .integer(i)
