@@ -82,11 +82,11 @@ class Lexer {
         self.column = 0
     }
 
-    var peek: Character? {
+    private var peek: Character? {
         return index < input.endIndex ? input[index] : nil
     }
 
-    func consume() {
+    private func consume() {
         if peek == "\n" {
             self.line += 1
             self.column = 0
@@ -97,7 +97,7 @@ class Lexer {
         index = input.index(after: index)
     }
 
-    func readSymbolOrNumber() -> String {
+    private func readSymbolOrNumber() -> String {
         var temp = ""
         while let char = peek, (!char.isWhite && tokenMapping[char] == nil) {
             temp.characters.append(char)
@@ -106,7 +106,7 @@ class Lexer {
         return temp
     }
 
-    func readString() -> String {
+    private func readString() -> String {
         var temp = ""
         var last: Character? = nil
 
@@ -126,7 +126,7 @@ class Lexer {
         return temp
     }
 
-    func append(_ token: Token) {
+    private func append(_ token: Token) {
         self.tokens.append(token)
         self.positions.append(self.position!)
     }
