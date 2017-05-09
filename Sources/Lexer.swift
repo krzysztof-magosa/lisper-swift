@@ -16,21 +16,33 @@ enum Token {
     case float(Double)
 }
 
-extension Token {
-    var id: String {
-        switch (self) {
-        case .lparen: return "("
-        case .rparen: return ")"
-        case .quote: return "'"
-        case .tick: return "`"
-        case .comma: return ","
-        case .symbol: return "symbol"
-        case .string: return "string"
-        case .integer: return "integer"
-        case .float: return "float"
-        }
+func ==(lhs: Token, rhs: Token) -> Bool {
+    switch (lhs, rhs) {
+    case (.lparen, .lparen):
+        return true
+    case (.rparen, .rparen):
+        return true
+    case (.quote, .quote):
+        return true
+    case (.tick, .tick):
+        return true
+    case (.symbol, .symbol):
+        return true
+    case (.string, .string):
+        return true
+    case (.integer, .integer):
+        return true
+    case (.float, .float):
+        return true
+    default:
+        return false
     }
 }
+
+func !=(lhs: Token, rhs: Token) -> Bool {
+    return !(lhs == rhs)
+}
+
 
 let tokenMapping: [Character: Token] = [
   "(": .lparen,

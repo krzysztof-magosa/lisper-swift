@@ -34,7 +34,7 @@ class Parser {
             throw ParseError.unexpectedEOF
         }
 
-        guard current.id == token.id else {
+        guard current == token else {
             throw ParseError.unexpectedToken(token)
         }
 
@@ -81,7 +81,7 @@ class Parser {
             case .lparen:
                 consume()
                 var elements = [Node]()
-                while let t = peek, t.id != Token.rparen.id {
+                while let t = peek, t != Token.rparen {
                     elements.append(try parseAll()!)
                 }
                 try consume(.rparen)
