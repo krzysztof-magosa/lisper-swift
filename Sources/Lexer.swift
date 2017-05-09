@@ -1,6 +1,6 @@
 extension Character {
     var isWhite: Bool {
-        return [" ", "\t"].contains(self)
+        return [" ", "\t", "\n"].contains(self)
     }
 }
 
@@ -16,7 +16,7 @@ enum Token {
     case float(Double)
 }
 
-// when we compare tokens we just take care about their types.
+// when we compare tokens we just take care about their types
 func ==(lhs: Token, rhs: Token) -> Bool {
     switch (lhs, rhs) {
     case (.lparen, .lparen):
@@ -26,6 +26,8 @@ func ==(lhs: Token, rhs: Token) -> Bool {
     case (.quote, .quote):
         return true
     case (.tick, .tick):
+        return true
+    case (.comma, .comma):
         return true
     case (.symbol, .symbol):
         return true
@@ -44,6 +46,15 @@ func !=(lhs: Token, rhs: Token) -> Bool {
     return !(lhs == rhs)
 }
 
+struct Position {
+    let line: Int
+    let column: Int
+}
+
+struct LexicalData {
+    let tokens: [Token]
+    let positions: [Position]
+}
 
 let tokenMapping: [Character: Token] = [
   "(": .lparen,
@@ -54,12 +65,21 @@ let tokenMapping: [Character: Token] = [
 ]
 
 class Lexer {
-    let input: String
+    var tokens: [Token]
+    var positions: [Position]
+    var input: String
     var index: String.Index
+    var line: Int
+    var column: Int
+    var position: Position?
 
     init(input: String) {
+        self.tokens = []
+        self.positions = []
         self.input = input
         self.index = input.startIndex
+        self.line = 0
+        self.column = 0
     }
 
     var peek: Character? {
@@ -67,6 +87,13 @@ class Lexer {
     }
 
     func consume() {
+        if peek == "\n" {
+            self.line += 1
+            self.column = 0
+        } else {
+            self.column += 1
+        }
+
         index = input.index(after: index)
     }
 
@@ -99,46 +126,45 @@ class Lexer {
         return temp
     }
 
-    func nextToken() -> Token? {
-        // eat whitespaces
-        while let char = peek, char.isWhite {
-            consume()
-        }
-
-        // exit if we have no more characters
-        guard let char = peek else {
-            return nil
-        }
-
-        // support for one-char tokens
-        if let token = tokenMapping[char] {
-            consume()
-            return token
-        }
-
-        // read string
-        if peek == "\"" {
-            return .string(readString())
-        }
-
-        // try to guess what we read
-        let temp = readSymbolOrNumber()
-        if let i = Int(temp) {
-            return .integer(i)
-        } else if let d = Double(temp) {
-            return .float(d)
-        } else {
-            return .symbol(temp)
-        }
+    func append(_ token: Token) {
+        self.tokens.append(token)
+        self.positions.append(self.position!)
     }
 
-    func tokenize() -> [Token] {
-        var tokens = [Token]()
+    func tokenize() -> LexicalData {
+        while index < input.endIndex {
+            // eat whitespaces
+            while let char = peek, char.isWhite {
+                consume()
+            }
 
-        while let token = nextToken() {
-            tokens.append(token)
+            // save position of token beginning
+            self.position = Position(line: line, column: column)
+
+            guard let char = peek else {
+                break
+            }
+
+            if let token = tokenMapping[char] {
+                // support for one-char tokens
+                consume()
+                append(token)
+            } else if peek == "\"" {
+                // consume string
+                append(.string(readString()))
+            } else {
+                // try to guess what we read
+                let temp = readSymbolOrNumber()
+                if let i = Int(temp) {
+                    append(.integer(i))
+                } else if let d = Double(temp) {
+                    append(.float(d))
+                } else {
+                    append(.symbol(temp))
+                }
+            }
         }
 
-        return tokens
+        return LexicalData(tokens: tokens, positions: positions)
     }
 }
