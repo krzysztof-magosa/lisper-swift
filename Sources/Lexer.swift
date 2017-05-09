@@ -136,6 +136,7 @@ class Lexer {
             // save position of token beginning
             self.position = Position(line: line, column: column)
 
+            // break loop on EOF
             guard let char = peek else {
                 break
             }
