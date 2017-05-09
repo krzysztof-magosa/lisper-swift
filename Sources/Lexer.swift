@@ -14,36 +14,31 @@ enum Token {
     case string(String)
     case integer(Int)
     case float(Double)
-}
 
-// when we compare tokens we just take care about their types
-func ==(lhs: Token, rhs: Token) -> Bool {
-    switch (lhs, rhs) {
-    case (.lparen, .lparen):
-        return true
-    case (.rparen, .rparen):
-        return true
-    case (.quote, .quote):
-        return true
-    case (.tick, .tick):
-        return true
-    case (.comma, .comma):
-        return true
-    case (.symbol, .symbol):
-        return true
-    case (.string, .string):
-        return true
-    case (.integer, .integer):
-        return true
-    case (.float, .float):
-        return true
-    default:
-        return false
+    func kindOf(_ other: Token) -> Bool {
+        switch (self, other) {
+        case (.lparen, .lparen):
+            return true
+        case (.rparen, .rparen):
+            return true
+        case (.quote, .quote):
+            return true
+        case (.tick, .tick):
+            return true
+        case (.comma, .comma):
+            return true
+        case (.symbol, .symbol):
+            return true
+        case (.string, .string):
+            return true
+        case (.integer, .integer):
+            return true
+        case (.float, .float):
+            return true
+        default:
+            return false
+        }
     }
-}
-
-func !=(lhs: Token, rhs: Token) -> Bool {
-    return !(lhs == rhs)
 }
 
 struct Position {
