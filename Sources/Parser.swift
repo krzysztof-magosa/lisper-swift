@@ -1,11 +1,11 @@
-// indirect enum Node {
-//     case list([Node?])
+indirect enum Node {
+    case list([Node?])
 
-//     case s(String, Int?)
-//     case string(String, Int?)
-//     case integer(Int, Int?)
-//     case float(Double, Int?)
-// }
+    case s(String, Int?)
+    case string(String, Int?)
+    case integer(Int, Int?)
+    case float(Double, Int?)
+}
 
 // enum ParseError: Error {
 //     case unexpectedToken(Token)
