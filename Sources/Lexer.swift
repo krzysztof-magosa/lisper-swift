@@ -7,9 +7,7 @@ extension Character {
 enum TokenType {
     case lparen
     case rparen
-    case quote
-    case tick
-    case comma
+    case modifier
     case symbol
     case string
     case integer
@@ -30,9 +28,9 @@ struct Token {
 let tokenMapping: [Character: TokenType] = [
   "(": .lparen,
   ")": .rparen,
-  "'": .quote,
-  "`": .tick,
-  ",": .comma
+  "'": .modifier,
+  "`": .modifier,
+  ",": .modifier
 ]
 
 class Lexer {
@@ -124,7 +122,7 @@ class Lexer {
             if let type = tokenMapping[char] {
                 // support for one-char tokens
                 consume()
-                append(type: type)
+                append(type: type, payload: "\(char)")
             } else if peek == "\"" {
                 // consume string
                 append(type: .string, payload: readString())
