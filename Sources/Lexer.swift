@@ -4,41 +4,16 @@ extension Character {
     }
 }
 
-enum Token {
+enum TokenType {
     case lparen
     case rparen
     case quote
     case tick
     case comma
-    case symbol(String)
-    case string(String)
-    case integer(Int)
-    case float(Double)
-
-    func kindOf(_ other: Token) -> Bool {
-        switch (self, other) {
-        case (.lparen, .lparen):
-            return true
-        case (.rparen, .rparen):
-            return true
-        case (.quote, .quote):
-            return true
-        case (.tick, .tick):
-            return true
-        case (.comma, .comma):
-            return true
-        case (.symbol, .symbol):
-            return true
-        case (.string, .string):
-            return true
-        case (.integer, .integer):
-            return true
-        case (.float, .float):
-            return true
-        default:
-            return false
-        }
-    }
+    case symbol
+    case string
+    case integer
+    case float
 }
 
 struct Position {
@@ -46,12 +21,13 @@ struct Position {
     let column: Int
 }
 
-struct LexicalData {
-    let tokens: [Token]
-    let positions: [Position]
+struct Token {
+    let type: TokenType
+    let payload: String
+    let position: Position
 }
 
-let tokenMapping: [Character: Token] = [
+let tokenMapping: [Character: TokenType] = [
   "(": .lparen,
   ")": .rparen,
   "'": .quote,
@@ -61,20 +37,19 @@ let tokenMapping: [Character: Token] = [
 
 class Lexer {
     var tokens: [Token]
-    var positions: [Position]
     var input: String
     var index: String.Index
     var line: Int
     var column: Int
-    var position: Position?
+    var position: Position
 
     init(input: String) {
         self.tokens = []
-        self.positions = []
         self.input = input
         self.index = input.startIndex
         self.line = 0
         self.column = 0
+        self.position = Position(line: self.line, column: self.column)
     }
 
     private var peek: Character? {
@@ -121,12 +96,17 @@ class Lexer {
         return temp
     }
 
-    private func append(_ token: Token) {
-        self.tokens.append(token)
-        self.positions.append(self.position!)
+    private func append(type: TokenType, payload: String="") {
+        self.tokens.append(
+          Token(
+            type: type,
+            payload: payload,
+            position: self.position
+          )
+        )
     }
 
-    func tokenize() -> LexicalData {
+    func tokenize() -> [Token] {
         while index < input.endIndex {
             // eat whitespaces
             while let char = peek, char.isWhite {
@@ -141,26 +121,26 @@ class Lexer {
                 break
             }
 
-            if let token = tokenMapping[char] {
+            if let type = tokenMapping[char] {
                 // support for one-char tokens
                 consume()
-                append(token)
+                append(type: type)
             } else if peek == "\"" {
                 // consume string
-                append(.string(readString()))
+                append(type: .string, payload: readString())
             } else {
                 // try to guess what we read
                 let temp = readSymbolOrNumber()
-                if let i = Int(temp) {
-                    append(.integer(i))
-                } else if let d = Double(temp) {
-                    append(.float(d))
+                if let _ = Int(temp) {
+                    append(type: .integer, payload: temp)
+                } else if let _ = Double(temp) {
+                    append(type: .float, payload: temp)
                 } else {
-                    append(.symbol(temp))
+                    append(type: .symbol, payload: temp)
                 }
             }
         }
 
-        return LexicalData(tokens: tokens, positions: positions)
+        return tokens
     }
 }

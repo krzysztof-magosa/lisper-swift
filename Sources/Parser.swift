@@ -1,10 +1,10 @@
 // indirect enum Node {
 //     case list([Node?])
 
-//     case symbol(String)
-//     case string(String)
-//     case integer(Int)
-//     case float(Double)
+//     case s(String, Int?)
+//     case string(String, Int?)
+//     case integer(Int, Int?)
+//     case float(Double, Int?)
 // }
 
 // enum ParseError: Error {
@@ -34,7 +34,7 @@
 //             throw ParseError.unexpectedEOF
 //         }
 
-//         guard current == token else {
+//         guard current.kindOf(token) else {
 //             throw ParseError.unexpectedToken(token)
 //         }
 
@@ -81,7 +81,7 @@
 //             case .lparen:
 //                 consume()
 //                 var elements = [Node]()
-//                 while let t = peek, t != Token.rparen {
+//                 while let t = peek, !t.kindOf(Token.rparen) {
 //                     elements.append(try parseAll()!)
 //                 }
 //                 try consume(.rparen)
@@ -92,10 +92,5 @@
 //         }
 
 //         return nil
-//     }
-
-//     func parse() {
-//         let x = try! parseAll()
-//         print(x!)
 //     }
 // }

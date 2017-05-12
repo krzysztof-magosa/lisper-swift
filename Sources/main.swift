@@ -1,5 +1,5 @@
 var lexer = Lexer(input: "(- -5.1 10.0)")
-var data = lexer.tokenize()
-
-print(data.tokens)
-print(data.positions)
+var tokens = lexer.tokenize()
+print(tokens)
+// var parser = Parser(input: lexicalData.tokens)
+// var data = try! parser.parseAll()
