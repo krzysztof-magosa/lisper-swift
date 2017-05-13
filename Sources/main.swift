@@ -2,19 +2,28 @@ var interpreter = Interpreter()
 
 var input: String?
 repeat {
-    print("LISPer> ", terminator: "")
-    var input = readLine()
+    do {
+        print("LISPer> ", terminator: "")
+        var input = readLine()
 
-    if input == nil {
-        break
+        if input == nil {
+            break
+        }
+
+        var lexer = Lexer(input: input!)
+        var tokens = lexer.tokenize()
+
+        var parser = Parser(input: tokens)
+        var nodes = try parser.parse()
+
+        var result = try interpreter.run(nodes[0])
+        dump(result)
+    } catch (InterpreterError.undefinedVariable(let name)) {
+        print("undefined variable \(name)")
+    } catch (InterpreterError.invalidType(let context, let index, let got, let expected)) {
+        let types = expected.map({ $0.lispType }).joined(separator: "/")
+        print("\(context): invalid type, got \(got.lispType), expected \(types)")
+    } catch (InterpreterError.nargs(let context, let got, let expected)) {
+        print("\(context): incorrect number of arguments, got \(got), expected \(expected.0)-\(expected.1)")
     }
-
-    var lexer = Lexer(input: input!)
-    var tokens = lexer.tokenize()
-
-    var parser = Parser(input: tokens)
-    var nodes = try parser.parse()
-
-    var result = try interpreter.run(nodes[0])
-    dump(result)
 } while true

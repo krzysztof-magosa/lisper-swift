@@ -1,4 +1,5 @@
 protocol Node {
+    static var lispType: String { get }
 }
 
 enum NumberType {
@@ -7,19 +8,23 @@ enum NumberType {
 }
 
 struct NumberNode: Node {
+    static let lispType = "NUMBER"
     let type: NumberType
     let value: Double
 }
 
 struct StringNode: Node {
+    static let lispType = "STRING"
     let value: String
 }
 
 struct SymbolNode: Node {
+    static let lispType = "SYMBOL"
     let name: String
 }
 
 struct ListNode: Node {
+    static let lispType = "LIST"
     let elements: [Node]
 }
 
