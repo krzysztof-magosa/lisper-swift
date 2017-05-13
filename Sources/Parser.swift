@@ -1,11 +1,13 @@
 protocol Node {
 }
 
-struct IntegerNode: Node {
-    let value: Int
+enum NumberType {
+    case integer
+    case float
 }
 
-struct FloatNode: Node {
+struct NumberNode: Node {
+    let type: NumberType
     let value: Double
 }
 
@@ -66,10 +68,10 @@ class Parser {
             switch token.type {
             case .integer:
                 consume()
-                return IntegerNode(value: Int(token.payload)!)
+                return NumberNode(type: .integer, value: Double(token.payload)!)
             case .float:
                 consume()
-                return FloatNode(value: Double(token.payload)!)
+                return NumberNode(type: .float, value: Double(token.payload)!)
             case .string():
                 consume()
                 return StringNode(value: token.payload)
@@ -108,7 +110,7 @@ class Parser {
         index = 0
 
         var nodes = [Node]()
-        while index < tokens.count {
+        while index < input.count {
             nodes.append(try parseAny()!)
         }
 
