@@ -17,12 +17,12 @@ repeat {
         var nodes = try parser.parse()
 
         var result = try interpreter.run(nodes[0])
-        dump(result)
+        print(result)
     } catch (InterpreterError.undefinedVariable(let name)) {
         print("undefined variable \(name)")
     } catch (InterpreterError.invalidType(let context, let index, let got, let expected)) {
         let types = expected.map({ $0.lispType }).joined(separator: "/")
-        print("\(context): invalid type, got \(got.lispType), expected \(types)")
+        print("\(context): argument \(index): invalid type, got \(got.lispType), expected \(types)")
     } catch (InterpreterError.nargs(let context, let got, let expected)) {
         print("\(context): incorrect number of arguments, got \(got), expected \(expected.0)-\(expected.1)")
     }
