@@ -1,96 +1,117 @@
-indirect enum Node {
-    case list([Node?])
-
-    case s(String, Int?)
-    case string(String, Int?)
-    case integer(Int, Int?)
-    case float(Double, Int?)
+protocol Node {
 }
 
-// enum ParseError: Error {
-//     case unexpectedToken(Token)
-//     case unexpectedEOF
-// }
+struct IntegerNode: Node {
+    let value: Int
+}
 
-// class Parser {
-//     let input: [Token]
-//     var index: Int
+struct FloatNode: Node {
+    let value: Double
+}
 
-//     init(input: [Token]) {
-//         self.input = input
-//         self.index = input.startIndex
-//     }
+struct StringNode: Node {
+    let value: String
+}
 
-//     var peek: Token? {
-//         return self.index < self.input.endIndex ? self.input[self.index] : nil
-//     }
+struct SymbolNode: Node {
+    let name: String
+}
 
-//     func consume() {
-//         self.index += 1
-//     }
+struct ListNode: Node {
+    let elements: [Node]
+}
 
-//     func consume(_ token: Token) throws {
-//         guard let current = peek else {
-//             throw ParseError.unexpectedEOF
-//         }
+enum ParseError: Error {
+    case unexpectedToken(TokenType)
+    case unexpectedEOF
+}
 
-//         guard current.kindOf(token) else {
-//             throw ParseError.unexpectedToken(token)
-//         }
+let modifierMapping: [String: String] = [
+  "'": "quote",
+  "`": "quasiquote",
+  ",": "unquote"
+]
 
-//         consume()
-//     }
+class Parser {
+    let input: [Token]
+    var index: Int
 
-//     func parseAll() throws -> Node? {
-//         while let token = peek {
-//             switch token {
-//             case .symbol(let v):
-//                 consume()
-//                 return .symbol(v)
-//             case .string(let v):
-//                 consume()
-//                 return .string(v)
-//             case .integer(let v):
-//                 consume()
-//                 return .integer(v)
-//             case .float(let v):
-//                 consume()
-//                 return .float(v)
+    init(input: [Token]) {
+        self.input = input
+        self.index = input.startIndex
+    }
 
-//             case .quote():
-//                 consume()
-//                 guard peek != nil else {
-//                     throw ParseError.unexpectedEOF
-//                 }
-//                 return .list([.symbol("quote"), try parseAll()])
+    var peek: Token? {
+         return self.index < self.input.endIndex ? self.input[self.index] : nil
+    }
 
-//             case .tick():
-//                 consume()
-//                 guard peek != nil else {
-//                     throw ParseError.unexpectedEOF
-//                 }
-//                 return .list([.symbol("quasiquote"), try parseAll()])
+    func consume() {
+        self.index += 1
+    }
 
-//             case .comma():
-//                 consume()
-//                 guard peek != nil else {
-//                     throw ParseError.unexpectedEOF
-//                 }
-//                 return .list([.symbol("unquote"), try parseAll()])
+    func consume(_ type: TokenType) throws {
+        guard let current = peek else {
+            throw ParseError.unexpectedEOF
+        }
 
-//             case .lparen:
-//                 consume()
-//                 var elements = [Node]()
-//                 while let t = peek, !t.kindOf(Token.rparen) {
-//                     elements.append(try parseAll()!)
-//                 }
-//                 try consume(.rparen)
-//                 return .list(elements)
-//             default:
-//                 throw ParseError.unexpectedToken(token)
-//             }
-//         }
+        guard current.type == type else {
+            throw ParseError.unexpectedToken(type)
+        }
 
-//         return nil
-//     }
-// }
+        consume()
+    }
+
+    func parseAny() throws -> Node? {
+        while let token = peek {
+            switch token.type {
+            case .integer:
+                consume()
+                return IntegerNode(value: Int(token.payload)!)
+            case .float:
+                consume()
+                return FloatNode(value: Double(token.payload)!)
+            case .string():
+                consume()
+                return StringNode(value: token.payload)
+            case .symbol:
+                consume()
+                return SymbolNode(name: token.payload)
+            case .modifier:
+                consume()
+                guard peek != nil else {
+                    throw ParseError.unexpectedEOF
+                }
+
+                return ListNode(
+                  elements: [
+                    SymbolNode(name: modifierMapping[token.payload]!),
+                    try parseAny()!
+                  ]
+                )
+            case .lparen:
+                consume()
+                var elements = [Node]()
+                while let t = peek, t.type != TokenType.rparen {
+                    elements.append(try parseAny()!)
+                }
+                try consume(.rparen)
+                return ListNode(elements: elements)
+            default:
+                throw ParseError.unexpectedToken(token.type)
+            }
+        }
+
+        return nil
+    }
+
+    func parse() throws -> [Node] {
+        index = 0
+
+        var nodes = [Node]()
+        while index < tokens.count {
+            nodes.append(try parseAny()!)
+        }
+
+        return nodes
+    }
+}
