@@ -14,13 +14,13 @@
    (if (null l)
        nil
      (join
-      (list (f (car l)))
+      (list (call f (car l)))
       (map f (cdr l)))))
 
  (def-lambda filter (f l)
    (if (null l)
        nil
-     (join (if (f (car l))
+     (join (if (call f (car l))
                (list (car l))
              nil)
            (filter f (cdr l)))))

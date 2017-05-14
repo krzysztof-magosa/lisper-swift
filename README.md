@@ -430,4 +430,151 @@ LISPer> (pp (+ 1 2))
 3
 ```
 
+### (to-symbol A)
+Converts string to symbol.  
+Number of arguments: 1.  
+Returns: SYMBOL.  
+
+```
+LISPer> (to-symbol "1+")
+1+
+LISPer>
+LISPer> (call (to-symbol "1+") 1)
+2
+```
+
 ## Standard macros
+### (def-macro A (B ...) C)
+Defines macro A with arguments (B ...) and body C.
+
+```
+LISPer> (def-macro hello (a) (print a))
+hello
+LISPer> (hello "hello")
+"hello"
+"hello"
+```
+
+### (def-lambda A (B ...) C)
+Defines lambda A with arguments (B ...) and body C.
+
+```
+LISPer> (def-lambda hello (a) (print a))
+hello
+LISPer> (hello "hello")
+"hello"
+"hello"
+```
+
+### (1+ A)
+Returns successor of A (number greater by 1).  
+
+```
+LISPer> (1+ 10)
+11
+LISPer> (1+ -20)
+-19
+```
+
+### (1- A)
+Returns predecessor of A (number lesser by 1).  
+
+```
+LISPer> (1- 10)
+9
+LISPer> (1- -20)
+-21
+```
+
+### (map A B)
+Returns list created by applying function A on list B.  
+
+```
+LISPer> (map '1+ (list 0 1 2 3 4))
+(1 2 3 4 5)
+
+LISPer> (map 'print (list 0 1 2 3 4))
+0
+1
+2
+3
+4
+(0 1 2 3 4)
+LISPer> (map 'null (list 1 nil 2 nil 3))
+(nil t nil t nil)
+```
+
+### (filter A B)
+Filters list B using function A.  
+
+```
+LISPer> (filter 'null (list 1 nil 2 nil))
+(nil nil)
+LISPer> (filter 'odd (list 1 2 3 4 5))
+(1 3 5)
+LISPer> (filter 'atom (list 1 (list 2 3) 4))
+(1 4)
+```
+
+### (reverse A)
+Reverses list A.  
+
+```
+LISPer> (reverse (list 5 4 3 2 1))
+(1 2 3 4 5)
+```
+
+### (head A B)
+Returns first A elements from list B.  
+
+```
+LISPer> (head 1 (list 1 2 3 4 5))
+(1)
+LISPer> (head 2 (list 1 2 3 4 5))
+(1 2)
+```
+
+### (tail A B)
+Returns last A elements from list B.  
+
+```
+LISPer> (tail 1 (list 1 2 3 4 5))
+(5)
+LISPer> (tail 2 (list 1 2 3 4 5))
+(4 5)
+```
+
+### (not A)
+Returns `t` if A is `nil`, `nil` otherwise.  
+
+```
+LISPer> (not t)
+nil
+LISPer> (not nil)
+t
+LISPer> (not 100)
+nil
+```
+
+### (even A)
+Returns `t` if A is even, `nil` otherwise.  
+
+```
+LISPer> (even 1)
+nil
+LISPer> (even 2)
+t
+LISPer> (even -2)
+t
+```
+
+### (odd A)
+Returns `t` if A is odd, `nil` otherwise.  
+```
+LISPer> (odd 1)
+t
+LISPer> (odd 2)
+nil
+LISPer> (odd -3)
+t
+```

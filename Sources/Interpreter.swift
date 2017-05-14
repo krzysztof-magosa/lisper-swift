@@ -148,6 +148,17 @@ class Interpreter {
         return name
     }
 
+    func builtin_call(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("call", args, 2)
+        let name = try eval(args[0], scope: scope)
+        try expect_type("call", [name], 0, [SymbolNode.self]) // @TODO it's hacky (list of args)
+
+        return try eval(
+          ListNode(elements: [name] + args.dropFirst()),
+          scope: scope
+        )
+    }
+
     func builtin_lambda(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("lambda", args, 2)
         try expect_type("lambda", args, 0, [ListNode.self])
@@ -384,6 +395,14 @@ class Interpreter {
         }
     }
 
+    func builtin_to_symbol(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("to-symbol", args, 1)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("to-symbol", evaled_args, 0, [StringNode.self])
+
+        return SymbolNode(name: (evaled_args[0] as! StringNode).value)
+    }
+
     func builtin_print(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("print", args, 1)
         let arg = try eval(args[0], scope: scope)
@@ -404,6 +423,7 @@ class Interpreter {
         self.builtins["lambda"]     = self.builtin_lambda
         self.builtins["macro"]      = self.builtin_macro
         self.builtins["define"]     = self.builtin_define
+        self.builtins["call"]       = self.builtin_call
 
         self.builtins["+"]          = self.builtin_math_add
         self.builtins["-"]          = self.builtin_math_sub
@@ -425,6 +445,7 @@ class Interpreter {
         self.builtins["car"]        = self.builtin_car
         self.builtins["cdr"]        = self.builtin_cdr
         self.builtins["if"]         = self.builtin_if
+        self.builtins["to-symbol"]  = self.builtin_to_symbol
         self.builtins["print"]      = self.builtin_print
     }
 
