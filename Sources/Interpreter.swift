@@ -134,7 +134,7 @@ class Interpreter {
 
     func builtin_begin(_ args: [Node], _ scope: Scope) throws -> Node {
         let evaled_args = try eval_all(args, scope: scope)
-        return evaled_args.last!
+        return evaled_args.isEmpty ? NIL_VALUE : evaled_args.last!
     }
 
     func builtin_define(_ args: [Node], _ scope: Scope) throws -> Node {
@@ -404,6 +404,7 @@ class Interpreter {
         self.builtins["lambda"]     = self.builtin_lambda
         self.builtins["macro"]      = self.builtin_macro
         self.builtins["define"]     = self.builtin_define
+
         self.builtins["+"]          = self.builtin_math_add
         self.builtins["-"]          = self.builtin_math_sub
         self.builtins["/"]          = self.builtin_math_div
@@ -414,6 +415,7 @@ class Interpreter {
         self.builtins["<="]         = self.builtin_math_le
         self.builtins[">"]          = self.builtin_math_gt
         self.builtins[">="]         = self.builtin_math_ge
+
         self.builtins["equal"]      = self.builtin_equal
         self.builtins["exists"]     = self.builtin_exists
         self.builtins["null"]       = self.builtin_null
