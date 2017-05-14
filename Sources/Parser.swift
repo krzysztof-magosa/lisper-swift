@@ -1,5 +1,5 @@
 enum ParseError: Error {
-    case unexpectedToken(TokenType)
+    case unexpectedToken(got: TokenType, position: Position)
     case unexpectedEOF
 }
 
@@ -32,7 +32,10 @@ class Parser {
         }
 
         guard current.type == type else {
-            throw ParseError.unexpectedToken(type)
+            throw ParseError.unexpectedToken(
+              got: current.type,
+              position: current.position
+            )
         }
 
         consume()
@@ -74,7 +77,10 @@ class Parser {
                 try consume(.rparen)
                 return ListNode(elements: elements)
             default:
-                throw ParseError.unexpectedToken(token.type)
+                throw ParseError.unexpectedToken(
+                  got: token.type,
+                  position: token.position
+                )
             }
         }
 

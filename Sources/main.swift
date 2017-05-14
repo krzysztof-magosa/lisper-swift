@@ -1,13 +1,23 @@
+import Foundation
+
+print("LISPer - Swift implementation of LISP dialect")
+print("(c) 2017 Krzysztof Magosa")
+print("")
+
 var interpreter = Interpreter()
 
 var input: String?
 repeat {
     do {
         print("LISPer> ", terminator: "")
-        var input = readLine()
+        input = readLine()
 
         if input == nil {
             break
+        }
+
+        if input! == "" {
+            continue
         }
 
         var lexer = Lexer(input: input!)
@@ -29,5 +39,12 @@ repeat {
         print("\(name) is not builtin/lambda so cannot be called")
     } catch (InterpreterError.illegalUse(let name)) {
         print("\(name) cannot be used like that")
+    } catch (ParseError.unexpectedEOF) {
+        print("Parse error: unexpected EOF")
+    } catch (ParseError.unexpectedToken(let got, let position)) {
+        let lines = input!.components(separatedBy: .newlines)
+        print(lines[position.line])
+        print(String(repeating: " ", count: position.column) + "^")
+        print("Parse error: unexpected token, got \(got) at \(position)")
     }
 } while true
