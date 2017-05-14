@@ -1,7 +1,7 @@
 # LISPer - LISP dialect implemented in Swift
 
 ## Built-in functions
-### + ...
+### (+ ...)
 Adds all arguments sequentially.  
 Number of arguments: any.  
 Returns: NUMBER.  
@@ -15,7 +15,7 @@ LISPer> (+ 2.0 2.0)
 4.0
 ```
 
-### - A B ...
+### (- A B ...)
 Substracts all arguments sequentially.  
 Number of arguments: 2 or more.  
 Returns: NUMBER.  
@@ -27,7 +27,7 @@ LISPer> (- 10.0 4 6)
 0.0
 ```
 
-### / A B ...
+### (/ A B ...)
 Divides all arguments sequentially.  
 Number of arguments: 2 or more.  
 Returns: NUMBER.  
@@ -39,7 +39,7 @@ LISPer> (/ 10 2.0)
 5.0
 ```
 
-### * A B ...
+### (* A B ...)
 Multiplies all arguments sequentially.  
 Number of arguments: 2 or more.  
 Returns: NUMBER.  
@@ -51,7 +51,7 @@ LISPer> (* 2 3 4.0)
 24.0
 ```
 
-### rem A B
+### (rem A B)
 Returns remainder of division of A over B.  
 Number of arguments: 2.  
 Returns: NUMBER.  
@@ -63,7 +63,7 @@ LISPer> (rem -10 3)
 -1
 ```
 
-### = A ...
+### (= A ...)
 Checks if all arguments are the same numbers.  
 Number of arguments: 1 or more.  
 Returns: `t` if true, `nil` otherwise.  
@@ -75,7 +75,7 @@ LISPer> (= 1 1.0)
 t
 ```
 
-### < A ...
+### (< A ...)
 Checks if numbers are sequentially greater than previous one.  
 Number of arguments: 1 or more.  
 Returns: `t` if true, `nil` otherwise.  
@@ -91,7 +91,7 @@ LISPer> (< 2 1)
 nil
 ```
 
-### <= A ...
+### (<= A ...)
 Checks if numbers are sequentially greater or equal than previous one.  
 Number of arguments: 1 or more.  
 Returns: `t` if true, `nil` otherwise.  
@@ -105,7 +105,7 @@ LISPer> (<= 2 1)
 nil
 ```
 
-### > A ...
+### (> A ...)
 Checks if numbers are sequentially less than previous one.  
 Number of arguments: 1 or more.  
 Returns: `t` if true, `nil` otherwise.  
@@ -119,7 +119,7 @@ LISPer> (> 1 2)
 nil
 ```
 
-### >= A ...
+### (>= A ...)
 Checks if numbers are sequentially less or equal than previous one.  
 Number of arguments: 1 or more.  
 Returns: `t` if true, `nil` otherwise.  
@@ -133,7 +133,7 @@ LISPer> (>= 2 3)
 nil
 ```
 
-### equal A B ...
+### (equal A B ...)
 Checks if all arguments are structurally similar.  
 Number of arguments: 2 or more.  
 Returns: `t` if true, `nil` otherwise.  
@@ -159,7 +159,7 @@ LISPer> (equal "hello" "hello")
 t
 ```
 
-### exists A
+### (exists A)
 Checks if symbol is available within scope.  
 Number of arguments: 1.  
 Returns: `t` if true, `nil` otherwise.  
@@ -173,7 +173,7 @@ LISPer> (exists hello)
 t
 ```
 
-### null A
+### (null A)
 Checks if argument is equal to `nil`.  
 Number of arguments: 1.  
 Returns: `t` if true, `nil` otherwise.  
@@ -191,7 +191,7 @@ LISPer> (null 5)
 nil
 ```
 
-### atom A
+### (atom A)
 Checks if argument is atom.  
 Number of arguments: 1.  
 Returns: `t` if true, `nil` otherwise.  
@@ -213,7 +213,7 @@ LISPer> (atom 1)
 t
 ```
 
-### join A B ...
+### (join A B ...)
 Joins all arguments together.  
 Number of arguments: 2 or more.  
 Returns: LIST.  
@@ -227,7 +227,7 @@ LISPer> (join nil nil)
 nil
 ```
 
-### cons A B ...
+### (cons A B ...)
 Returns list created from head (A) and rest (B).  
 Number of arguments: 2 or more.  
 Returns: LIST.  
@@ -242,7 +242,7 @@ LISPer> (cons 1 nil)
 (1)
 ```
 
-### car A
+### (car A)
 Returns head of list.  
 Number of arguments: 1.  
 Returns: ANY.  
@@ -256,7 +256,7 @@ LISPer> (car (list))
 nil
 ```
 
-### cdr A
+### (cdr A)
 Returns rest of list.  
 Number of arguments: 1.  
 Returns: LIST.  
@@ -270,7 +270,7 @@ LISPer> (cdr (list))
 nil
 ```
 
-### if A B C
+### (if A B C)
 In case A is true evaluates B, otherwise C (which defaults to nil).  
 Number of arguments: 2 or 3.  
 Returns: ANY.  
@@ -286,7 +286,7 @@ LISPer> (if nil 1 2)
 2
 ```
 
-### print A
+### (print A)
 Prints LISP representation of argument.  
 Number of arguments: 1.  
 Returns: ANY.  
@@ -306,7 +306,7 @@ LISPer> (print '(list 1 2 3))
 (list 1 2 3)
 ```
 
-### quote A or 'A
+### (quote A or 'A)
 Returns argument without evaluating it.  
 Number of arguments: 1.  
 Returns: ANY.  
@@ -322,7 +322,7 @@ LISPer> '((+ 2 2) (+ 2 2))
 ((+ 2 2) (+ 2 2))
 ```
 
-### quasiquote or `A
+### (quasiquote or `A)
 Works similar to quote but allows part of argument to be evaluated (using `,` prefix).  
 Number of arguments: 1.  
 Returns: ANY.  
@@ -350,7 +350,7 @@ LISPer> (list 1 2 3)
 (1 2 3)
 ```
 
-### begin ...
+### (begin ...)
 Evaluates all arguments and returns value of last one.  
 Number of arguments: any.  
 Returns: ANY.  
@@ -371,7 +371,7 @@ LISPer> (begin (print "a") (print "b") (print "c"))
 "c"
 ```
 
-### define A B
+### (define A B)
 Defines variable A in current scope and sets its value to B.  
 Number of arguments: 2.  
 Returns: SYMBOL.  
@@ -383,7 +383,7 @@ LISPer> x
 5
 ```
 
-### lambda (A ...) B
+### (lambda (A ...) B)
 Creates lambda which takes parameters `A ...` and its body is `B`.  
 Number of arguments: 2.  
 Returns: LAMBDA.  
@@ -408,7 +408,7 @@ LISPer> (pp (+ 1 2))
 3
 ```
 
-### macro (A ...) B
+### (macro (A ...) B)
 Create macro which takes parameters `A ...` and its body is `B`.  
 Number of arguments: 2.  
 Returns: MACRO.  
