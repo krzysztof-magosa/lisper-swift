@@ -1,9 +1,6 @@
-let NIL_NAME = "nil"
-let TRUE_NAME = "t"
-
-func inferNumberType(_ args: [Node]) throws -> NumberType {
+func inferNumberType(_ args: [NumberNode]) -> NumberType {
     for arg in args {
-        if (arg as! NumberNode).type == .float {
+        if arg.type == .float {
             return .float
         }
     }
@@ -63,7 +60,7 @@ func expect_nargs(_ context: String, _ args: [Node], _ expected: Int) throws {
 }
 
 func expect_type(_ context: String, _ args: [Node], _ index: Int, _ types: [Node.Type]) throws {
-    var got = type(of: args[index])
+    let got = type(of: args[index])
     if !types.contains(where: { $0 == got }) {
         throw InterpreterError.invalidType(context: context, index: index, got: got, expected: types)
     }
@@ -99,60 +96,48 @@ class Interpreter {
             try expect_type("+", evaled_args, i, [NumberNode.self])
         }
 
-        let numbers = evaled_args.map({ ($0 as! NumberNode).value })
-        return NumberNode(
-          type: try inferNumberType(evaled_args),
-          value: numbers.reduce(0, +)
-        )
+        let numbers = evaled_args.map({ $0 as! NumberNode })
+        return numbers.reduce(NumberNode(type: .integer, value: 0), +)
     }
 
     func builtin_math_sub(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("-", args, (2, Int.max))
         let evaled_args = try eval_all(args, scope: scope)
         for i in 0..<args.count {
-            try expect_type("+", evaled_args, i, [NumberNode.self])
+            try expect_type("-", evaled_args, i, [NumberNode.self])
         }
 
-        let numbers = evaled_args.map({ ($0 as! NumberNode).value })
-        return NumberNode(
-          type: try inferNumberType(evaled_args),
-          value: numbers.dropFirst().reduce(numbers.first!, -)
-        )
+        let numbers = evaled_args.map({ $0 as! NumberNode })
+        return numbers.dropFirst().reduce(numbers.first!, -)
     }
 
     func builtin_math_div(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("/", args, (2, Int.max))
         let evaled_args = try eval_all(args, scope: scope)
         for i in 0..<args.count {
-            try expect_type("+", evaled_args, i, [NumberNode.self])
+            try expect_type("/", evaled_args, i, [NumberNode.self])
         }
 
-        let numbers = evaled_args.map({ ($0 as! NumberNode).value })
-        return NumberNode(
-          type: try inferNumberType(evaled_args),
-          value: numbers.dropFirst().reduce(numbers.first!, /)
-        )
+        let numbers = evaled_args.map({ $0 as! NumberNode })
+        return numbers.dropFirst().reduce(numbers.first!, /)
     }
 
     func builtin_math_mul(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("*", args, (1, Int.max))
         let evaled_args = try eval_all(args, scope: scope)
         for i in 0..<args.count {
-            try expect_type("+", evaled_args, i, [NumberNode.self])
+            try expect_type("*", evaled_args, i, [NumberNode.self])
         }
 
-        let numbers = evaled_args.map({ ($0 as! NumberNode).value })
-        return NumberNode(
-          type: try inferNumberType(evaled_args),
-          value: numbers.dropFirst().reduce(numbers.first!, *)
-        )
+        let numbers = evaled_args.map({ $0 as! NumberNode })
+        return numbers.dropFirst().reduce(numbers.first!, *)
     }
 
     func builtin_math_equal(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("=", args, (1, Int.max))
         let evaled_args = try eval_all(args, scope: scope)
         for i in 0..<args.count {
-            try expect_type("+", evaled_args, i, [NumberNode.self])
+            try expect_type("=", evaled_args, i, [NumberNode.self])
         }
 
         let numbers = evaled_args.map({ ($0 as! NumberNode).value })
@@ -160,7 +145,7 @@ class Interpreter {
         if numbers.dropFirst().contains(where: { $0 != base }) {
             return ListNode(elements: [])
         } else {
-            return SymbolNode(name: TRUE_NAME)
+            return TRUE_VALUE
         }
     }
 
@@ -170,17 +155,65 @@ class Interpreter {
 
         let base = evaled_args.first!
         if evaled_args.dropFirst().contains(where: { $0 != base }) {
-            return ListNode(elements: [])
+            return NIL_VALUE
         } else {
-            return SymbolNode(name: TRUE_NAME)
+            return TRUE_VALUE
         }
     }
 
+    func builtin_atom(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("atom", args, 1)
+
+        let arg = try eval(args[0], scope: scope)
+        guard let list = arg as? ListNode else {
+            return TRUE_VALUE
+        }
+
+        return list.elements.count == 0 ? TRUE_VALUE : NIL_VALUE
+    }
+
+    func builtin_cons(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("atom", args, 2)
+        let evaled_args = try eval_all(args, scope: scope)
+
+        let head = [evaled_args[0]]
+
+        switch evaled_args[1] {
+        case let rest as ListNode:
+            return ListNode(elements: head + rest.elements)
+        default:
+            return ListNode(elements: head + [evaled_args[1]])
+        }
+    }
+
+    func builtin_car(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("car", args, 1)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("car", evaled_args, 0, [ListNode.self])
+
+        let list = evaled_args[0] as! ListNode
+
+        return list.elements.count > 0 ? list.elements[0] : NIL_VALUE
+    }
+
+    func builtin_cdr(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("cdr", args, 1)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("cdr", evaled_args, 0, [ListNode.self])
+
+        let list = evaled_args[0] as! ListNode
+
+        return ListNode(elements: Array<Node>(list.elements.dropFirst()))
+    }
+
+    func builtin_if(_ args: [Node], _ scope: Scope) throws -> Node {
+        return NIL_VALUE
+    }
 
     init() {
         self.globalScope = Scope()
-        self.globalScope.define(NIL_NAME, ListNode(elements: []))
-        self.globalScope.define(TRUE_NAME, SymbolNode(name: TRUE_NAME))
+        self.globalScope.define(NIL_NAME, NIL_VALUE)
+        self.globalScope.define(TRUE_NAME, TRUE_VALUE)
 
         self.builtins["quote"]   = self.builtin_quote
         self.builtins["begin"]   = self.builtin_begin
@@ -191,6 +224,12 @@ class Interpreter {
         self.builtins["*"]       = self.builtin_math_mul
         self.builtins["="]       = self.builtin_math_equal
         self.builtins["equal"]   = self.builtin_equal
+
+        self.builtins["atom"]    = self.builtin_atom
+        self.builtins["cons"]    = self.builtin_cons
+        self.builtins["car"]     = self.builtin_car
+        self.builtins["cdr"]     = self.builtin_cdr
+        self.builtins["if"]      = self.builtin_if
     }
 
     func eval_all(_ nodes: [Node], scope: Scope) throws -> [Node] {
