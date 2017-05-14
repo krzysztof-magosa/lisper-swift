@@ -45,7 +45,7 @@ if !files.isEmpty {
     input = try files.map({ try String(contentsOfFile: $0) }).joined(separator: "\n")
     _ = try run(input!, using: interpreter)
 } else {
-    print("LISPer - Swift implementation of LISP dialect")
+    print("LISPer - LISP dialect implemented in Swift")
     print("(c) 2017 Krzysztof Magosa")
     print("")
 
