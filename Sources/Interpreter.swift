@@ -18,10 +18,24 @@ class Scope {
     var data: [String: Node]
     var parent: Scope?
 
-    init(parameters: [String] = [], arguments: [String] = [], parent: Scope? = nil) {
+    init(parameters: [String] = [], arguments: [Node] = [], parent: Scope? = nil) {
         self.data = [:]
-        // @TODO put data
+
+        for (k, v) in zip(parameters, arguments) {
+            self.data[k] = v
+        }
+
         self.parent = parent
+    }
+
+    func exists(_ name: String) throws -> Bool {
+        do {
+            _ = try findScope(name)
+        } catch InterpreterError.undefinedVariable {
+            return false
+        }
+
+        return true
     }
 
     func findScope(_ name: String) throws -> Scope {
@@ -74,6 +88,11 @@ class Interpreter {
         return args[0]
     }
 
+    func builtin_list(_ args: [Node], _ scope: Scope) throws -> Node {
+        let evaled_args = try eval_all(args, scope: scope)
+        return ListNode(elements: Array(evaled_args))
+    }
+
     func builtin_begin(_ args: [Node], _ scope: Scope) throws -> Node {
         let evaled_args = try eval_all(args, scope: scope)
         return evaled_args.last!
@@ -88,6 +107,23 @@ class Interpreter {
 
         scope.define((name as! SymbolNode).name, value)
         return name
+    }
+
+    func builtin_lambda(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("lambda", args, 2)
+        try expect_type("lambda", args, 0, [ListNode.self])
+
+        let parameters = (args[0] as! ListNode).elements
+
+        for i in 0..<parameters.count {
+            try expect_type("lambda::arguments", parameters, i, [SymbolNode.self])
+        }
+
+        return LambdaNode(
+          parameters: parameters.map { ($0 as! SymbolNode).name },
+          body: args[1],
+          parentScope: scope
+        )
     }
 
     func builtin_math_add(_ args: [Node], _ scope: Scope) throws -> Node {
@@ -161,6 +197,20 @@ class Interpreter {
         }
     }
 
+    func builtin_exists(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("exists", args, 1)
+        try expect_type("exists", args, 0, [SymbolNode.self])
+
+        return (try scope.exists((args[0] as! SymbolNode).name)) ? TRUE_VALUE : NIL_VALUE
+    }
+
+    func builtin_null(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("null", args, 1)
+
+        let arg = try eval(args[0], scope: scope)
+        return (arg == NIL_VALUE) ? TRUE_VALUE : NIL_VALUE
+    }
+
     func builtin_atom(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("atom", args, 1)
 
@@ -207,7 +257,14 @@ class Interpreter {
     }
 
     func builtin_if(_ args: [Node], _ scope: Scope) throws -> Node {
-        return NIL_VALUE
+        try expect_nargs("if", args, (2, 3))
+
+        let expr = (try eval(args[0], scope: scope) != NIL_VALUE) ? 1 : 2
+        if args.count > expr { // 0 is used for condition
+            return try eval(args[expr], scope: scope)
+        } else {
+            return NIL_VALUE
+        }
     }
 
     init() {
@@ -216,7 +273,9 @@ class Interpreter {
         self.globalScope.define(TRUE_NAME, TRUE_VALUE)
 
         self.builtins["quote"]   = self.builtin_quote
+        self.builtins["list"]    = self.builtin_list
         self.builtins["begin"]   = self.builtin_begin
+        self.builtins["lambda"]  = self.builtin_lambda
         self.builtins["define"]  = self.builtin_define
         self.builtins["+"]       = self.builtin_math_add
         self.builtins["-"]       = self.builtin_math_sub
@@ -225,6 +284,8 @@ class Interpreter {
         self.builtins["="]       = self.builtin_math_equal
         self.builtins["equal"]   = self.builtin_equal
 
+        self.builtins["exists"]  = self.builtin_exists
+        self.builtins["null"]    = self.builtin_null
         self.builtins["atom"]    = self.builtin_atom
         self.builtins["cons"]    = self.builtin_cons
         self.builtins["car"]     = self.builtin_car
@@ -254,7 +315,11 @@ class Interpreter {
                 if let builtin = builtins[s.name] {
                     return try builtin(Array(l.elements.dropFirst()), scope)
                 } else {
-                    return ListNode(elements: [])
+                    // @TODO !!! Check if it's really lambda.
+                    let lambda = (try eval(s, scope: scope)) as! LambdaNode
+                    let arguments = try eval_all(Array(l.elements.dropFirst()), scope: scope)
+
+                    return try lambda.call(arguments: arguments, using: self)
                 }
             }
         default:

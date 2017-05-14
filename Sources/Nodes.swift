@@ -126,3 +126,25 @@ struct ListNode: Node {
         return ListNode(elements: lhs.elements + rhs.elements)
     }
 }
+
+struct LambdaNode: Node {
+    static let lispType = "LAMBDA"
+
+    var parameters: [String]
+    var body: Node
+    var parentScope: Scope
+
+    var description: String {
+        return "(lambda \(parameters) \(body))"
+    }
+
+    func call(arguments: [Node], using: Interpreter) throws -> Node {
+        let scope = Scope(
+          parameters: parameters,
+          arguments: arguments,
+          parent: parentScope
+        )
+
+        return try interpreter.eval(body, scope: scope)
+    }
+}
