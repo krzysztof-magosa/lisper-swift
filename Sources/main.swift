@@ -1,33 +1,14 @@
 import Foundation
 
-print("LISPer - Swift implementation of LISP dialect")
-print("(c) 2017 Krzysztof Magosa")
-print("")
-
-var interpreter = Interpreter()
-
-var input: String?
-repeat {
+func run(_ input: String, using: Interpreter) throws -> Node? {
     do {
-        print("LISPer> ", terminator: "")
-        input = readLine()
+        let lexer = Lexer(input: input)
+        let tokens = lexer.tokenize()
 
-        if input == nil {
-            break
-        }
+        let parser = Parser(input: tokens)
+        let nodes = try parser.parse()
 
-        if input! == "" {
-            continue
-        }
-
-        var lexer = Lexer(input: input!)
-        var tokens = lexer.tokenize()
-
-        var parser = Parser(input: tokens)
-        var nodes = try parser.parse()
-
-        var result = try interpreter.run(nodes[0])
-        print(result)
+        return try using.run(nodes[0])
     } catch (InterpreterError.undefinedVariable(let name)) {
         print("undefined variable \(name)")
     } catch (InterpreterError.invalidType(let context, let index, let got, let expected)) {
@@ -42,9 +23,44 @@ repeat {
     } catch (ParseError.unexpectedEOF) {
         print("Parse error: unexpected EOF")
     } catch (ParseError.unexpectedToken(let got, let position)) {
-        let lines = input!.components(separatedBy: .newlines)
+        let lines = input.components(separatedBy: .newlines)
         print(lines[position.line])
         print(String(repeating: " ", count: position.column) + "^")
         print("Parse error: unexpected token, got \(got) at \(position)")
     }
-} while true
+
+    return nil
+}
+
+//
+
+let files = CommandLine.arguments.dropFirst()
+let interpreter = Interpreter()
+var input: String?
+
+if !files.isEmpty {
+    input = try files.map({ try String(contentsOfFile: $0) }).joined(separator: "\n")
+    _ = try run(input!, using: interpreter)
+} else {
+    print("LISPer - Swift implementation of LISP dialect")
+    print("(c) 2017 Krzysztof Magosa")
+    print("")
+
+    repeat {
+        print("LISPer> ", terminator: "")
+        input = readLine()
+
+        // Ctrl+D
+        if input == nil {
+            break
+        }
+
+        if input! == "" {
+            continue
+        }
+
+        if let result = try run(input!, using: interpreter) {
+            print(result)
+        }
+    } while true
+}

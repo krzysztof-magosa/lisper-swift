@@ -89,6 +89,22 @@ struct NumberNode: Node {
           value: lhs.value * rhs.value
         )
     }
+
+    static func <(lhs: NumberNode, rhs: NumberNode) -> Bool {
+        return lhs.value < rhs.value
+    }
+
+    static func <=(lhs: NumberNode, rhs: NumberNode) -> Bool {
+        return lhs.value <= rhs.value
+    }
+
+    static func >(lhs: NumberNode, rhs: NumberNode) -> Bool {
+        return lhs.value > rhs.value
+    }
+
+    static func >=(lhs: NumberNode, rhs: NumberNode) -> Bool {
+        return lhs.value >= rhs.value
+    }
 }
 
 struct StringNode: Node {

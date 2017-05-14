@@ -241,6 +241,40 @@ class Interpreter {
         }
     }
 
+    func builtin_math_comp(_ args: [Node], _ scope: Scope, label: String, op: (NumberNode, NumberNode) -> Bool) throws -> Node {
+        try expect_nargs(label, args, (1, Int.max))
+        let evaled_args = try eval_all(args, scope: scope)
+        for i in 0..<args.count {
+            try expect_type(label, evaled_args, i, [NumberNode.self])
+        }
+
+        let numbers = evaled_args.map({ $0 as! NumberNode })
+
+        for i in 0..<numbers.count-1 {
+            if !op(numbers[i], numbers[i+1]) {
+                return NIL_VALUE
+            }
+        }
+
+        return TRUE_VALUE
+    }
+
+    func builtin_math_lt(_ args: [Node], _ scope: Scope) throws -> Node {
+        return try builtin_math_comp(args, scope, label: "<", op: <)
+    }
+
+    func builtin_math_le(_ args: [Node], _ scope: Scope) throws -> Node {
+        return try builtin_math_comp(args, scope, label: "<=", op: <=)
+    }
+
+    func builtin_math_gt(_ args: [Node], _ scope: Scope) throws -> Node {
+        return try builtin_math_comp(args, scope, label: ">", op: >)
+    }
+
+    func builtin_math_ge(_ args: [Node], _ scope: Scope) throws -> Node {
+        return try builtin_math_comp(args, scope, label: ">=", op: >=)
+    }
+
     func builtin_equal(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("equal", args, (2, Int.max))
         let evaled_args = try eval_all(args, scope: scope)
@@ -326,6 +360,13 @@ class Interpreter {
         }
     }
 
+    func builtin_print(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("print", args, 1)
+        let arg = try eval(args[0], scope: scope)
+        print(arg)
+        return arg
+    }
+
     init() {
         self.globalScope = Scope()
         self.globalScope.define(NIL_NAME, NIL_VALUE)
@@ -344,8 +385,11 @@ class Interpreter {
         self.builtins["/"]          = self.builtin_math_div
         self.builtins["*"]          = self.builtin_math_mul
         self.builtins["="]          = self.builtin_math_equal
+        self.builtins["<"]          = self.builtin_math_lt
+        self.builtins["<="]         = self.builtin_math_le
+        self.builtins[">"]          = self.builtin_math_gt
+        self.builtins[">="]         = self.builtin_math_ge
         self.builtins["equal"]      = self.builtin_equal
-
         self.builtins["exists"]     = self.builtin_exists
         self.builtins["null"]       = self.builtin_null
         self.builtins["atom"]       = self.builtin_atom
@@ -353,6 +397,7 @@ class Interpreter {
         self.builtins["car"]        = self.builtin_car
         self.builtins["cdr"]        = self.builtin_cdr
         self.builtins["if"]         = self.builtin_if
+        self.builtins["print"]      = self.builtin_print
     }
 
     func eval_all(_ nodes: [Node], scope: Scope) throws -> [Node] {
