@@ -25,5 +25,9 @@ repeat {
         print("\(context): argument \(index): invalid type, got \(got.lispType), expected \(types)")
     } catch (InterpreterError.nargs(let context, let got, let expected)) {
         print("\(context): incorrect number of arguments, got \(got), expected \(expected.0)-\(expected.1)")
+    } catch (InterpreterError.notCallable(let name)) {
+        print("\(name) is not builtin/lambda so cannot be called")
+    } catch (InterpreterError.illegalUse(let name)) {
+        print("\(name) cannot be used like that")
     }
 } while true

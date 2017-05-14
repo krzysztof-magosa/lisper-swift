@@ -12,6 +12,8 @@ enum InterpreterError: Error {
     case undefinedVariable(name: String)
     case invalidType(context: String, index: Int, got: Node.Type, expected: [Node.Type])
     case nargs(context: String, got: Int, expected: (Int, Int))
+    case notCallable(name: String)
+    case illegalUse(name: String)
 }
 
 class Scope {
@@ -84,8 +86,45 @@ class Interpreter {
     var globalScope: Scope
     var builtins: [String: ([Node], Scope) throws -> (Node)] = [:]
 
+    func expandQuasiquote(_ item: Node) -> Node {
+        if isAtom(item) {
+            return ListNode(
+              elements: [
+                SymbolNode(name: "quote"),
+                item
+              ]
+            )
+        } else {
+            let list = item as! ListNode // hmm
+
+            if list.elements[0] == SymbolNode(name: "unquote") {
+                return list.elements[1]
+            } else {
+                return ListNode(
+                  elements: [
+                    SymbolNode(name: "cons"),
+                    expandQuasiquote(list.elements[0]),
+                    expandQuasiquote(ListNode(elements: Array(list.elements.dropFirst())))
+                  ]
+                )
+            }
+        }
+    }
+
+    func builtin_unquote(_ args: [Node], _ scope: Scope) throws -> Node {
+        throw InterpreterError.illegalUse(name: "unquote")
+    }
+
     func builtin_quote(_ args: [Node], _ scope: Scope) throws -> Node {
         return args[0]
+    }
+
+    func builtin_quasiquote(_ args: [Node], _ scope: Scope) throws -> Node {
+        // @TODO walidacja
+        return try eval(
+          expandQuasiquote(args[0]),
+          scope: scope
+        )
     }
 
     func builtin_list(_ args: [Node], _ scope: Scope) throws -> Node {
@@ -116,10 +155,27 @@ class Interpreter {
         let parameters = (args[0] as! ListNode).elements
 
         for i in 0..<parameters.count {
-            try expect_type("lambda::arguments", parameters, i, [SymbolNode.self])
+            try expect_type("lambda::parameters", parameters, i, [SymbolNode.self])
         }
 
         return LambdaNode(
+          parameters: parameters.map { ($0 as! SymbolNode).name },
+          body: args[1],
+          parentScope: scope
+        )
+    }
+
+    func builtin_macro(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("macro", args, 2)
+        try expect_type("macro", args, 0, [ListNode.self])
+
+        let parameters = (args[0] as! ListNode).elements
+
+        for i in 0..<parameters.count {
+            try expect_type("macro::parameters", parameters, i, [SymbolNode.self])
+        }
+
+        return MacroNode(
           parameters: parameters.map { ($0 as! SymbolNode).name },
           body: args[1],
           parentScope: scope
@@ -211,15 +267,18 @@ class Interpreter {
         return (arg == NIL_VALUE) ? TRUE_VALUE : NIL_VALUE
     }
 
-    func builtin_atom(_ args: [Node], _ scope: Scope) throws -> Node {
-        try expect_nargs("atom", args, 1)
-
-        let arg = try eval(args[0], scope: scope)
-        guard let list = arg as? ListNode else {
-            return TRUE_VALUE
+    func isAtom(_ item: Node) -> Bool {
+        guard let list = item as? ListNode else {
+            return true
         }
 
-        return list.elements.count == 0 ? TRUE_VALUE : NIL_VALUE
+        return list.elements.count == 0
+    }
+
+    func builtin_atom(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("atom", args, 1)
+        let item = try eval(args[0], scope: scope)
+        return isAtom(item) ? TRUE_VALUE : NIL_VALUE
     }
 
     func builtin_cons(_ args: [Node], _ scope: Scope) throws -> Node {
@@ -272,25 +331,28 @@ class Interpreter {
         self.globalScope.define(NIL_NAME, NIL_VALUE)
         self.globalScope.define(TRUE_NAME, TRUE_VALUE)
 
-        self.builtins["quote"]   = self.builtin_quote
-        self.builtins["list"]    = self.builtin_list
-        self.builtins["begin"]   = self.builtin_begin
-        self.builtins["lambda"]  = self.builtin_lambda
-        self.builtins["define"]  = self.builtin_define
-        self.builtins["+"]       = self.builtin_math_add
-        self.builtins["-"]       = self.builtin_math_sub
-        self.builtins["/"]       = self.builtin_math_div
-        self.builtins["*"]       = self.builtin_math_mul
-        self.builtins["="]       = self.builtin_math_equal
-        self.builtins["equal"]   = self.builtin_equal
+        self.builtins["unquote"]    = self.builtin_unquote
+        self.builtins["quote"]      = self.builtin_quote
+        self.builtins["quasiquote"] = self.builtin_quasiquote
+        self.builtins["list"]       = self.builtin_list
+        self.builtins["begin"]      = self.builtin_begin
+        self.builtins["lambda"]     = self.builtin_lambda
+        self.builtins["macro"]      = self.builtin_macro
+        self.builtins["define"]     = self.builtin_define
+        self.builtins["+"]          = self.builtin_math_add
+        self.builtins["-"]          = self.builtin_math_sub
+        self.builtins["/"]          = self.builtin_math_div
+        self.builtins["*"]          = self.builtin_math_mul
+        self.builtins["="]          = self.builtin_math_equal
+        self.builtins["equal"]      = self.builtin_equal
 
-        self.builtins["exists"]  = self.builtin_exists
-        self.builtins["null"]    = self.builtin_null
-        self.builtins["atom"]    = self.builtin_atom
-        self.builtins["cons"]    = self.builtin_cons
-        self.builtins["car"]     = self.builtin_car
-        self.builtins["cdr"]     = self.builtin_cdr
-        self.builtins["if"]      = self.builtin_if
+        self.builtins["exists"]     = self.builtin_exists
+        self.builtins["null"]       = self.builtin_null
+        self.builtins["atom"]       = self.builtin_atom
+        self.builtins["cons"]       = self.builtin_cons
+        self.builtins["car"]        = self.builtin_car
+        self.builtins["cdr"]        = self.builtin_cdr
+        self.builtins["if"]         = self.builtin_if
     }
 
     func eval_all(_ nodes: [Node], scope: Scope) throws -> [Node] {
@@ -315,11 +377,22 @@ class Interpreter {
                 if let builtin = builtins[s.name] {
                     return try builtin(Array(l.elements.dropFirst()), scope)
                 } else {
-                    // @TODO !!! Check if it's really lambda.
-                    let lambda = (try eval(s, scope: scope)) as! LambdaNode
-                    let arguments = try eval_all(Array(l.elements.dropFirst()), scope: scope)
+                    let something = try eval(s, scope: scope)
 
-                    return try lambda.call(arguments: arguments, using: self)
+                    switch something {
+                    case let lambda as LambdaNode:
+                        let arguments = try eval_all(Array(l.elements.dropFirst()), scope: scope)
+                        return try lambda.call(arguments: arguments, using: self)
+                    case let macro as MacroNode:
+                        let lisp = try macro.call(
+                          arguments: Array(l.elements.dropFirst()),
+                          using: self
+                        )
+
+                        return try eval(lisp, scope: scope)
+                    default:
+                        throw InterpreterError.notCallable(name: s.name)
+                    }
                 }
             }
         default:
