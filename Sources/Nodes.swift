@@ -90,6 +90,13 @@ struct NumberNode: Node {
         )
     }
 
+    func rem(_ other: NumberNode) -> NumberNode {
+        return NumberNode(
+          type: inferNumberType([self, other]),
+          value: self.value.truncatingRemainder(dividingBy: other.value)
+        )
+    }
+
     static func <(lhs: NumberNode, rhs: NumberNode) -> Bool {
         return lhs.value < rhs.value
     }

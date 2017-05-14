@@ -38,6 +38,9 @@ let files = CommandLine.arguments.dropFirst()
 let interpreter = Interpreter()
 var input: String?
 
+let stdlib = try String(contentsOfFile: "stdlib.lisper")
+_ = try run(stdlib, using: interpreter)
+
 if !files.isEmpty {
     input = try files.map({ try String(contentsOfFile: $0) }).joined(separator: "\n")
     _ = try run(input!, using: interpreter)

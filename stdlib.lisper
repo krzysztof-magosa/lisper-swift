@@ -1,0 +1,47 @@
+(begin
+ (define def-macro
+   (macro (name args body)
+          `(define ,name (macro ,args ,body))))
+
+ (define def-lambda
+   (macro (name args body)
+          `(define ,name (lambda ,args ,body))))
+
+ (def-lambda 1+ (x) (+ x 1))
+ (def-lambda 1- (x) (- x 1))
+
+ (def-lambda map (f l)
+   (if (null l)
+       nil
+     (join
+      (list (f (car l)))
+      (map f (cdr l)))))
+
+ (def-lambda filter (f l)
+   (if (null l)
+       nil
+     (join (if (f (car l))
+               (list (car l))
+             nil)
+           (filter f (cdr l)))))
+
+ (def-lambda reverse (l)
+   (if (null l)
+       nil
+     (join
+      (reverse (cdr l))
+      (list (car l)))))
+
+ (def-lambda head (n l)
+   (if (= n 0)
+       nil
+     (join
+      (list (car l))
+      (head (- n 1) (cdr l)))))
+
+ (def-lambda tail (n l)
+   (reverse (head n (reverse l))))
+
+ (def-lambda not (x) (if (null x) t nil))
+ (def-lambda even (x) (= 0 (rem x 2)))
+ (def-lambda odd (x) (not (= 0 (rem x 2)))))

@@ -225,6 +225,18 @@ class Interpreter {
         return numbers.dropFirst().reduce(numbers.first!, *)
     }
 
+    func builtin_math_rem(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("rem", args, 2)
+        let evaled_args = try eval_all(args, scope: scope)
+        for i in 0..<args.count {
+            try expect_type("*", evaled_args, i, [NumberNode.self])
+        }
+
+        let numbers = evaled_args.map({ $0 as! NumberNode })
+        return numbers[0].rem(numbers[1])
+    }
+
+
     func builtin_math_equal(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("=", args, (1, Int.max))
         let evaled_args = try eval_all(args, scope: scope)
@@ -315,6 +327,18 @@ class Interpreter {
         return isAtom(item) ? TRUE_VALUE : NIL_VALUE
     }
 
+    func builtin_join(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("join", args, (2, Int.max))
+        let evaled_args = try eval_all(args, scope: scope)
+        for i in 0..<args.count {
+            try expect_type("join", evaled_args, i, [ListNode.self])
+        }
+
+        let lists = evaled_args.map({ $0 as! ListNode })
+
+        return lists.dropFirst().reduce(lists.first!, { $0 + $1})
+    }
+
     func builtin_cons(_ args: [Node], _ scope: Scope) throws -> Node {
         try expect_nargs("atom", args, 2)
         let evaled_args = try eval_all(args, scope: scope)
@@ -384,6 +408,7 @@ class Interpreter {
         self.builtins["-"]          = self.builtin_math_sub
         self.builtins["/"]          = self.builtin_math_div
         self.builtins["*"]          = self.builtin_math_mul
+        self.builtins["rem"]        = self.builtin_math_rem
         self.builtins["="]          = self.builtin_math_equal
         self.builtins["<"]          = self.builtin_math_lt
         self.builtins["<="]         = self.builtin_math_le
@@ -393,6 +418,7 @@ class Interpreter {
         self.builtins["exists"]     = self.builtin_exists
         self.builtins["null"]       = self.builtin_null
         self.builtins["atom"]       = self.builtin_atom
+        self.builtins["join"]       = self.builtin_join
         self.builtins["cons"]       = self.builtin_cons
         self.builtins["car"]        = self.builtin_car
         self.builtins["cdr"]        = self.builtin_cdr

@@ -1,3 +1,0 @@
-(begin
- (define sum (lambda (a b) (+ a b)))
- (sum 5 5))
