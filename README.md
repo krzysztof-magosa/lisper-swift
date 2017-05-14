@@ -338,7 +338,7 @@ LISPer> `(,(+ 2 2) (+ 2 2))
 (4 (+ 2 2))
 ```
 
-### list ...
+### (list ...)
 Creates list consisted of arguments.  
 Number of arguments: any.  
 Returns: LIST.  
