@@ -95,6 +95,7 @@ func expect_ntype(_ context: String, _ args: [Node], _ index: Int, _ type: Numbe
 class Interpreter {
     var globalScope: Scope
     var builtins: [String: ([Node], Scope) throws -> (Node)] = [:]
+    var extensions: [InterpreterExtension] = []
 
     func expandQuasiquote(_ item: Node) -> Node {
         if isAtom(item) {

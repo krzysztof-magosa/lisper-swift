@@ -40,6 +40,13 @@ let files = CommandLine.arguments.dropFirst()
 let interpreter = Interpreter()
 var input: String?
 
+// let a = InterpreterMath()
+// a.register(interpreter)
+// let i = a.index()
+// let f = i["+"]!
+// let s = Scope()
+// try f([NumberNode(type: .integer, value: 5.0)], s)
+
 let stdlib = try String(contentsOfFile: "stdlib.lisper")
 _ = try run(stdlib, using: interpreter)
 
