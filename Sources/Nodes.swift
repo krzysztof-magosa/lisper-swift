@@ -121,6 +121,10 @@ struct StringNode: Node {
     var description: String {
         return "\"\(value)\""
     }
+
+    static func +(lhs: StringNode, rhs: StringNode) -> StringNode {
+        return StringNode(value: lhs.value + rhs.value)
+    }
 }
 
 struct SymbolNode: Node {

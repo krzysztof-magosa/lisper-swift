@@ -11,6 +11,7 @@ func inferNumberType(_ args: [NumberNode]) -> NumberType {
 enum InterpreterError: Error {
     case undefinedVariable(name: String)
     case invalidType(context: String, index: Int, got: Node.Type, expected: [Node.Type])
+    case invalidNumberType(context: String, index: Int, got: NumberType, expected: NumberType)
     case nargs(context: String, got: Int, expected: (Int, Int))
     case notCallable(name: String)
     case illegalUse(name: String)
@@ -82,6 +83,15 @@ func expect_type(_ context: String, _ args: [Node], _ index: Int, _ types: [Node
     }
 }
 
+func expect_ntype(_ context: String, _ args: [Node], _ index: Int, _ type: NumberType) throws {
+    try expect_type(context, args, index, [NumberNode.self])
+    let n = args[index] as! NumberNode
+
+    if n.type != type {
+        throw InterpreterError.invalidNumberType(context: context, index: index, got: n.type, expected: type)
+    }
+}
+
 class Interpreter {
     var globalScope: Scope
     var builtins: [String: ([Node], Scope) throws -> (Node)] = [:]
@@ -145,6 +155,17 @@ class Interpreter {
         let value = try eval(args[1], scope: scope)
 
         scope.define((name as! SymbolNode).name, value)
+        return name
+    }
+
+    func builtin_set(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("set!", args, 2)
+        try expect_type("set!", args, 0, [SymbolNode.self])
+
+        let name = args[0]
+        let value = try eval(args[1], scope: scope)
+
+        try scope.set((name as! SymbolNode).name, value)
         return name
     }
 
@@ -410,6 +431,69 @@ class Interpreter {
         return arg
     }
 
+    func builtin_concat(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("concat", args, (1, Int.max))
+        let evaled_args = try eval_all(args, scope: scope)
+        for i in 0..<args.count {
+            try expect_type("concat", evaled_args, i, [StringNode.self])
+        }
+        let strings = evaled_args.map({ $0 as! StringNode })
+
+        return strings.reduce(StringNode(value: ""), { $0 + $1 })
+    }
+
+    func builtin_char(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("char", args, 2)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("char", evaled_args, 0, [StringNode.self])
+        try expect_ntype("char", evaled_args, 1, .integer)
+
+        let string = (evaled_args[0] as! StringNode).value
+        let n = Int((evaled_args[1] as! NumberNode).value)
+
+        let characters = Array(string.characters)
+
+        if n >= 0 && n < characters.count {
+            return StringNode(value: String(characters[n]))
+        } else {
+            return NIL_VALUE
+        }
+    }
+
+    func builtin_upcase(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("upcase", args, 1)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("char", evaled_args, 0, [StringNode.self])
+        let string = (evaled_args[0] as! StringNode).value
+        return StringNode(value: string.uppercased())
+    }
+
+    func builtin_downcase(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("upcase", args, 1)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("char", evaled_args, 0, [StringNode.self])
+        let string = (evaled_args[0] as! StringNode).value
+        return StringNode(value: string.lowercased())
+    }
+
+    func builtin_count(_ args: [Node], _ scope: Scope) throws -> Node {
+        try expect_nargs("count", args, 1)
+        let evaled_args = try eval_all(args, scope: scope)
+        try expect_type("count", evaled_args, 0, [ListNode.self, StringNode.self])
+
+        var result: Int
+        switch evaled_args[0] {
+        case let s as StringNode:
+            result = Array(s.value.characters).count
+        case let l as ListNode:
+            result = l.elements.count
+        default:
+            result = 0
+        }
+
+        return NumberNode(type: .integer, value: Double(result))
+    }
+
     init() {
         self.globalScope = Scope()
         self.globalScope.define(NIL_NAME, NIL_VALUE)
@@ -423,6 +507,7 @@ class Interpreter {
         self.builtins["lambda"]     = self.builtin_lambda
         self.builtins["macro"]      = self.builtin_macro
         self.builtins["define"]     = self.builtin_define
+        self.builtins["set!"]       = self.builtin_set
         self.builtins["call"]       = self.builtin_call
 
         self.builtins["+"]          = self.builtin_math_add
@@ -447,6 +532,11 @@ class Interpreter {
         self.builtins["if"]         = self.builtin_if
         self.builtins["to-symbol"]  = self.builtin_to_symbol
         self.builtins["print"]      = self.builtin_print
+        self.builtins["concat"]     = self.builtin_concat
+        self.builtins["char"]       = self.builtin_char
+        self.builtins["upcase"]     = self.builtin_upcase
+        self.builtins["downcase"]   = self.builtin_downcase
+        self.builtins["count"]      = self.builtin_count
     }
 
     func eval_all(_ nodes: [Node], scope: Scope) throws -> [Node] {

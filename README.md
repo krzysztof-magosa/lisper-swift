@@ -383,6 +383,26 @@ LISPer> x
 5
 ```
 
+### (set! A B)
+Changes value of variable A to B.  
+Number of arguments: 2.  
+Returns: SYMBOL.  
+
+```
+LISPer> (set! x 5)
+undefined variable x
+LISPer> (define x 5)
+x
+LISPer> (print x)
+5
+5
+LISPer> (set! x 10)
+x
+LISPer> (print x)
+10
+10
+```
+
 ### (lambda (A ...) B)
 Creates lambda which takes parameters `A ...` and its body is `B`.  
 Number of arguments: 2.  
@@ -441,6 +461,54 @@ LISPer> (to-symbol "1+")
 LISPer>
 LISPer> (call (to-symbol "1+") 1)
 2
+``
+
+### (concat A ...)
+Concatenates strings together.  
+Number of arguments.  
+Returns: STRING.  
+
+```
+LISPer> (concat "hello")
+"hello"
+LISPer> (concat "hello")
+"hello"
+LISPer> (concat "hello" " " "world")
+"hello world"
+```
+
+### (char A B)
+Returns character at position B from string A, in case of error `nil` is returned.  
+Number of arguments: 2.  
+Returns: STRING or LIST.  
+
+```
+LISPer> (char "hello" 0)
+"h"
+LISPer> (char "hello" 4)
+"o"
+LISPer> (char "hello" 5)
+nil
+```
+
+### (upcase A)
+Returns string A with lower case characters replaced with upper case ones.  
+Number of arguments: 1.  
+Returns: STRING.  
+
+```
+LISPer> (upcase "hello")
+"HELLO"
+```
+
+### (downcase A)
+Returns string A with upper case characters replaced with lower case ones.  
+Number of arguments: 1.  
+Returns: STRING.  
+
+```
+LISPer> (downcase "HELLO")
+"hello"
 ```
 
 ## Standard macros
