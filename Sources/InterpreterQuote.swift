@@ -2,12 +2,29 @@ class InterpreterQuotePlugin: InterpreterBuiltinsPlugin {
     override
     func index() -> [String: BuiltinType] {
         return [
-          "unquote": self.fnUnquote,
-          "quote": self.fnQuote,
-          "quasiquote": self.fnQuasiquote
+          "unquote": fnUnquote,
+          "quote": fnQuote,
+          "quasiquote": fnQuasiquote
         ]
     }
 
+    func fnUnquote(_ args: [Node], _ scope: Scope) throws -> Node {
+        throw InterpreterError.illegalUse(name: "unquote")
+    }
+
+    func fnQuote(_ args: [Node], _ scope: Scope) throws -> Node {
+        return args[0]
+    }
+
+    func fnQuasiquote(_ args: [Node], _ scope: Scope) throws -> Node {
+        // @TODO validation
+        return try eval(
+          expandQuasiquote(args[0]),
+          scope: scope
+        )
+    }
+
+    // helper
     func expandQuasiquote(_ item: Node) -> Node {
         if isAtom(item) {
             return ListNode(
@@ -31,21 +48,5 @@ class InterpreterQuotePlugin: InterpreterBuiltinsPlugin {
                 )
             }
         }
-    }
-
-    func fnUnquote(_ args: [Node], _ scope: Scope) throws -> Node {
-        throw InterpreterError.illegalUse(name: "unquote")
-    }
-
-    func fnQuote(_ args: [Node], _ scope: Scope) throws -> Node {
-        return args[0]
-    }
-
-    func fnQuasiquote(_ args: [Node], _ scope: Scope) throws -> Node {
-        // @TODO validation
-        return try eval(
-          expandQuasiquote(args[0]),
-          scope: scope
-        )
     }
 }

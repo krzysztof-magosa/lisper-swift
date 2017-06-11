@@ -2,12 +2,12 @@ class InterpreterStringPlugin: InterpreterBuiltinsPlugin {
     override
     func index() -> [String: BuiltinType] {
         return [
-          "to-symbol": self.fnToSymbol,
-          "print": self.fnPrint,
-          "concat": self.fnConcat,
-          "char": self.fnChar,
-          "upcase": self.fnUpcase,
-          "downcase": self.fnDowncase
+          "to-symbol": fnToSymbol,
+          "print": fnPrint,
+          "concat": fnConcat,
+          "char": fnChar,
+          "upcase": fnUpcase,
+          "downcase": fnDowncase
         ]
     }
 

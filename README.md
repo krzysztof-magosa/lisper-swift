@@ -229,7 +229,7 @@ nil
 
 ### (cons A B ...)
 Returns list created from head (A) and rest (B).  
-Number of arguments: 2 or more.  
+Number of arguments: 2.  
 Returns: LIST.  
 Remarks: LISPer does not support pairs, therefore list is always returned.  
 
@@ -306,7 +306,7 @@ LISPer> (print '(list 1 2 3))
 (list 1 2 3)
 ```
 
-### (quote A or 'A)
+### (quote A) or 'A
 Returns argument without evaluating it.  
 Number of arguments: 1.  
 Returns: ANY.  
@@ -322,7 +322,7 @@ LISPer> '((+ 2 2) (+ 2 2))
 ((+ 2 2) (+ 2 2))
 ```
 
-### (quasiquote or `A)
+### (quasiquote A) or `A
 Works similar to quote but allows part of argument to be evaluated (using `,` prefix).  
 Number of arguments: 1.  
 Returns: ANY.  
