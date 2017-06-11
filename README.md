@@ -461,7 +461,7 @@ LISPer> (to-symbol "1+")
 LISPer>
 LISPer> (call (to-symbol "1+") 1)
 2
-``
+```
 
 ### (concat A ...)
 Concatenates strings together.  
